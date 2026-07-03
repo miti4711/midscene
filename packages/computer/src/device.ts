@@ -312,6 +312,7 @@ async function getLibnut(): Promise<LibNut> {
 
 const debugDevice = getDebug('computer:device');
 const warnDevice = getDebug('computer:device', { console: true });
+const actionLogDevice = getDebug('computer:device:action');
 const debugComputerInput = getDebug('computer:input', { console: true });
 const WINDOWS_UIPI_DOC_URL =
   'https://midscenejs.com/computer-getting-started#windows-clicks-have-no-effect-on-some-apps';
@@ -708,6 +709,7 @@ export class ComputerDevice implements AbstractInterface {
     sendKeyViaAppleScript,
     runPhasedScroll,
     debug: (message) => debugDevice(message),
+    actionLog: (message) => actionLogDevice(message),
   });
   /**
    * On macOS, use AppleScript for keyboard operations by default
@@ -1262,6 +1264,7 @@ $g.Dispose(); $bmp.Dispose(); $ms.Dispose()
    * 4. Restores old clipboard content
    */
   private async typeViaClipboard(text: string): Promise<void> {
+    actionLogDevice(`============> typeViaClipboard(${text})`);
     debugDevice('Using clipboard to input text', {
       textLength: text.length,
       preview: text.substring(0, 20),

@@ -35,6 +35,7 @@ interface ComputerInputDriverOptions {
     steps: number,
   ): boolean;
   debug(message: string): void;
+  actionLog(message: string): void;
 }
 
 export class ComputerInputDriver {
@@ -55,18 +56,22 @@ export class ComputerInputDriver {
   }
 
   getScreenSize(): Size {
+    this.options.actionLog('============> getScreenSize()');
     return this.getLibnutOrThrow('getScreenSize').getScreenSize();
   }
 
   getMousePos(): { x: number; y: number } {
+    this.options.actionLog('============> getMousePos()');
     return this.getLibnutOrThrow('getMousePos').getMousePos();
   }
 
   moveMouse(x: number, y: number): void {
+    this.options.actionLog(`============> moveMouse(${x},${y})`);
     this.getLibnutOrThrow('moveMouse').moveMouse(x, y);
   }
 
   focusActiveWindow(): boolean {
+    this.options.actionLog('============> focusActiveWindow()');
     const lib = this.getLibnutOrThrow('focusActiveWindow');
     if (
       typeof lib.getActiveWindow !== 'function' ||
@@ -87,6 +92,7 @@ export class ComputerInputDriver {
   }
 
   getActiveWindowRect(): WindowRect | null {
+    this.options.actionLog('============> getActiveWindowRect()');
     const lib = this.getLibnutOrThrow('getActiveWindowRect');
     if (
       typeof lib.getActiveWindow !== 'function' ||
@@ -119,6 +125,7 @@ export class ComputerInputDriver {
   }
 
   mouseClick(button?: MouseButton, double?: boolean): void {
+    this.options.actionLog(`============> mouseClick(${button},${double})`);
     const lib = this.getLibnutOrThrow('mouseClick');
     // libnut is a native binding that distinguishes "no argument" from
     // "explicit undefined" — passing undefined for optional args trips
@@ -133,10 +140,12 @@ export class ComputerInputDriver {
   }
 
   mouseToggle(state: 'up' | 'down', button: MouseButton = 'left'): void {
+    this.options.actionLog(`============> mouseToggle(${state},${button})`);
     this.getLibnutOrThrow('mouseToggle').mouseToggle(state, button);
   }
 
   scrollMouse(x: number, y: number): void {
+    this.options.actionLog(`============> scrollMouse(${x},${y})`);
     this.getLibnutOrThrow('scrollMouse').scrollMouse(x, y);
   }
 
@@ -164,6 +173,7 @@ export class ComputerInputDriver {
   }
 
   keyTap(key: string, modifiers?: string[]): void {
+    this.options.actionLog(`============> keyTap(${key},${modifiers})`);
     const lib = this.getLibnutOrThrow('keyTap');
     // See note on mouseClick — avoid passing explicit undefined to libnut.
     if (modifiers !== undefined) {
@@ -174,11 +184,15 @@ export class ComputerInputDriver {
   }
 
   sendKeyViaAppleScript(key: string, modifiers: string[] = []): void {
+    this.options.actionLog(
+      `============> sendKeyViaAppleScript(${key},${modifiers})`,
+    );
     this.assertActive('sendKeyViaAppleScript');
     this.options.sendKeyViaAppleScript(key, modifiers);
   }
 
   sendKey(key: string, modifiers: string[] = []): void {
+    this.options.actionLog(`============> sendKey(${key},${modifiers})`);
     if (this.options.useAppleScript()) {
       this.sendKeyViaAppleScript(key, modifiers);
       return;
@@ -196,6 +210,9 @@ export class ComputerInputDriver {
     pixels: number,
     steps: number,
   ): boolean {
+    this.options.actionLog(
+      `============> runPhasedScroll(${direction},${pixels},${steps})`,
+    );
     this.assertActive('runPhasedScroll');
     return this.options.runPhasedScroll(direction, pixels, steps);
   }
@@ -225,6 +242,9 @@ export class ComputerInputDriver {
     steps: number,
     stepDelay: number,
   ): Promise<void> {
+    this.options.actionLog(
+      `============> smoothMoveMouse(${targetX},${targetY},${steps},${stepDelay})`,
+    );
     const currentPos = this.getMousePos();
     for (let i = 1; i <= steps; i++) {
       const stepX = Math.round(
@@ -270,6 +290,7 @@ export class ComputerInputDriver {
   }
 
   private releaseMouseButton(button: MouseButton): void {
+    this.options.actionLog(`============> releaseMouseButton(${button})`);
     try {
       const libnut = this.options.getLibnut();
       assert(libnut, 'libnut not initialized');
