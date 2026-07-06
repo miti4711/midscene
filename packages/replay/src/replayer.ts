@@ -53,6 +53,7 @@ export async function replay(
 
   let mouseX = 0;
   let mouseY = 0;
+  libnut.moveMouse(10, 10);
   try {
     const pos = libnut.getMousePos();
     mouseX = pos.x;
@@ -85,20 +86,12 @@ export async function replay(
     onBeforeAction?.(action, globalIdx);
 
     try {
-      await executeAction(libnut, action, mouseX, mouseY, delayFactor);
-
-      if (action.name === 'moveMouse' || action.name === 'smoothMoveMouse') {
-        if (action.name === 'moveMouse' && action.args.length >= 2) {
-          mouseX = Number(action.args[0]);
-          mouseY = Number(action.args[1]);
-        } else if (
-          action.name === 'smoothMoveMouse' &&
-          action.args.length >= 2
-        ) {
-          mouseX = Number(action.args[0]);
-          mouseY = Number(action.args[1]);
-        }
-      }
+      await executeAction(libnut, action, mouseX, mouseY, delayFactor, {
+        onPositionChange: (x, y) => {
+          mouseX = x;
+          mouseY = y;
+        },
+      });
 
       result.executedActions++;
 
@@ -158,9 +151,10 @@ function computeInterActionDelay(
 async function executeAction(
   libnut: LibNut,
   action: ReplayAction,
-  _currentX: number,
-  _currentY: number,
+  currentX: number,
+  currentY: number,
   delayFactor: number,
+  ctx: { onPositionChange?: (x: number, y: number) => void },
 ): Promise<void> {
   const args = action.args;
   const safeNum = (arg: string, fallback = 0) => {
@@ -173,6 +167,7 @@ async function executeAction(
       const x = safeNum(args[0]);
       const y = safeNum(args[1]);
       libnut.moveMouse(x, y);
+      ctx.onPositionChange?.(x, y);
       break;
     }
 
@@ -189,19 +184,23 @@ async function executeAction(
             : stepDelay * delayFactor;
       await replaySmoothMoveMouse(
         libnut,
-        _currentX,
-        _currentY,
+        currentX,
+        currentY,
         x,
         y,
         steps,
         actualDelay,
       );
+      ctx.onPositionChange?.(x, y);
       break;
     }
 
     case 'mouseClick': {
       const button = args[0] === 'undefined' ? undefined : (args[0] as any);
-      const double = args[1] === 'true';
+      // const double = args[1] === 'true';
+      const double = args[1]?.includes('undefined')
+        ? undefined
+        : args[1] === 'true';
       if (double !== undefined && double) {
         libnut.mouseClick(button, double);
       } else if (button) {
