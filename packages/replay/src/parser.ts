@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import type { ParsedLog, ReplayAction } from './types';
 
-export const ACTION_LINE_RE = /^\[(\S+)\]\s+===========>\s+(\w+)\(([^)]*)\)$/;
+export const ACTION_LINE_RE = /^\[(\S+)\]\s+============>\s+(\w+)\(([^)]*)\)$/;
 
 const NOOP_ACTIONS = new Set(['getScreenSize', 'getMousePos']);
 
