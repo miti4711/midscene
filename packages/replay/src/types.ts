@@ -31,6 +31,8 @@ export interface ReplayOptions {
   startFrom?: number;
   endAt?: number;
   skipNoOps?: boolean;
+  capture?: boolean;
+  screenshotDir?: string;
   onBeforeAction?: (action: ReplayAction, index: number) => void;
   onAfterAction?: (action: ReplayAction, index: number) => void;
   onError?: (error: Error, action: ReplayAction, index: number) => void;

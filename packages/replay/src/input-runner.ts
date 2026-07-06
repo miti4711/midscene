@@ -24,6 +24,11 @@ export async function getLibnut(): Promise<LibNut> {
   }
 }
 
+export async function captureScreenshot(): Promise<Buffer> {
+  const screenshot = (await import('screenshot-desktop')).default;
+  return screenshot({ format: 'png' });
+}
+
 export class ClipboardRunner {
   private constructor() {}
   static async paste(text: string): Promise<void> {

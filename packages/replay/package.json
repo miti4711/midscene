@@ -28,11 +28,13 @@
   },
   "dependencies": {
     "@computer-use/libnut": "^4.2.0",
-    "clipboardy": "^4.0.0"
+    "clipboardy": "^4.0.0",
+    "screenshot-desktop": "^1.15.3"
   },
   "devDependencies": {
     "@rslib/core": "^0.18.3",
     "@types/node": "^18.0.0",
+    "@types/screenshot-desktop": "1.15.0",
     "typescript": "^5.8.3"
   }
 }

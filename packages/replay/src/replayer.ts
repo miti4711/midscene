@@ -1,4 +1,6 @@
-import { ClipboardRunner, loadLibnut } from './input-runner';
+import fs from 'node:fs';
+import path from 'node:path';
+import { ClipboardRunner, captureScreenshot, loadLibnut } from './input-runner';
 import { isNoopAction } from './parser';
 import { replaySmoothMoveMouse, sleep } from './smooth-move';
 import type {
@@ -26,10 +28,18 @@ export async function replay(
     startFrom = 0,
     endAt = parsedLog.actions.length - 1,
     skipNoOps = true,
+    capture,
+    screenshotDir = './screenshots',
     onBeforeAction,
     onAfterAction,
     onError,
   } = options;
+
+  if (capture) {
+    fs.mkdirSync(screenshotDir, { recursive: true });
+  }
+
+  let screenshotCounter = 0;
 
   const allActions = parsedLog.actions;
   const totalActions = allActions.length;
@@ -84,6 +94,22 @@ export async function replay(
     }
 
     onBeforeAction?.(action, globalIdx);
+
+    if (capture) {
+      const padded = String(screenshotCounter).padStart(4, '0');
+      const screenshotPath = path.join(
+        screenshotDir,
+        `${padded}_${action.name}_expected.png`,
+      );
+      try {
+        const buf = await captureScreenshot();
+        fs.writeFileSync(screenshotPath, buf);
+        console.log(`  [screenshot] ${screenshotPath}`);
+      } catch (err) {
+        console.error(`  [screenshot error] ${err}`);
+      }
+      screenshotCounter++;
+    }
 
     try {
       await executeAction(libnut, action, mouseX, mouseY, delayFactor, {

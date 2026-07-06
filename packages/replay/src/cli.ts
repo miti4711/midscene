@@ -9,9 +9,11 @@ Options:
   --speed <mode>         Playback speed: real, instant, fast, or number (1-100). Default: instant
   --from <index>         Start replaying from this action index. Default: 0
   --to <index>           Stop replaying at this action index. Default: last action
-  --skip-noops           Skip read-only actions (getScreenSize, getMousePos). Default: true
-  --no-skip-noops        Do not skip read-only actions
-  --help                 Show this message
+   --skip-noops           Skip read-only actions (getScreenSize, getMousePos). Default: true
+   --no-skip-noops        Do not skip read-only actions
+    --capture              Capture a screenshot before each action
+    --screenshot-dir <dir> Screenshot output directory. Default: ./screenshots
+   --help                 Show this message
 `);
 }
 
@@ -22,6 +24,8 @@ function parseArgs(argv: string[]) {
     from: 0,
     to: Number.POSITIVE_INFINITY,
     skipNoOps: true,
+    capture: false,
+    screenshotDir: '',
   };
 
   let i = 0;
@@ -42,6 +46,11 @@ function parseArgs(argv: string[]) {
       args.to = Number.parseInt(argv[i], 10);
     } else if (arg === '--no-skip-noops') {
       args.skipNoOps = false;
+    } else if (arg === '--capture') {
+      args.capture = true;
+    } else if (arg === '--screenshot-dir') {
+      i++;
+      args.screenshotDir = argv[i];
     } else if (arg.startsWith('-')) {
       console.error(`Unknown option: ${arg}`);
       process.exit(1);
@@ -102,6 +111,8 @@ export async function main() {
     startFrom: args.from,
     endAt: toIndex,
     skipNoOps: args.skipNoOps,
+    capture: args.capture,
+    screenshotDir: args.screenshotDir || './screenshots',
     onBeforeAction: (action, index) => {
       process.stdout.write(
         `\r[${index + 1}/${parsedLog.actions.length}] ${action.name}(${action.args.join(',')})`,
