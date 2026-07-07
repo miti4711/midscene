@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { ClipboardRunner, captureScreenshot, loadLibnut } from './input-runner';
@@ -109,13 +110,35 @@ export async function replay(
         screenshotDir,
         `${padded}_${action.name}_${suffix}.png`,
       );
+      let saved = false;
       try {
         const buf = await captureScreenshot();
         fs.writeFileSync(screenshotPath, buf);
         console.log(`  [screenshot] ${screenshotPath}`);
+        saved = true;
       } catch (err) {
         console.error(`  [screenshot error] ${err}`);
       }
+
+      if (selfHeal && saved) {
+        const expectedPath = path.join(
+          screenshotDir,
+          `${padded}_${action.name}_expected.png`,
+        );
+        if (fs.existsSync(expectedPath)) {
+          const diffPath = path.join(
+            screenshotDir,
+            `${padded}_${action.name}_diff.png`,
+          );
+          try {
+            generateImagMagickDiff(expectedPath, screenshotPath, diffPath);
+            console.log(`  [diff] ${diffPath}`);
+          } catch (err) {
+            console.error(`  [diff error] ${err}`);
+          }
+        }
+      }
+
       screenshotCounter++;
     }
 
@@ -298,4 +321,40 @@ async function executeAction(
       break;
     }
   }
+}
+
+/**
+ * Generate a visual diff between expected and actual screenshots using
+ * ImageMagick's darken-composite technique.
+ */
+function generateImagMagickDiff(
+  expectedPath: string,
+  actualPath: string,
+  outputPath: string,
+): void {
+  execFileSync('convert', [
+    '(',
+    expectedPath,
+    '-flatten',
+    '-grayscale',
+    'Rec709Luminance',
+    ')',
+    '(',
+    actualPath,
+    '-flatten',
+    '-grayscale',
+    'Rec709Luminance',
+    ')',
+    '(',
+    '-clone',
+    '0-1',
+    '-compose',
+    'darken',
+    '-composite',
+    ')',
+    '-channel',
+    'RGB',
+    '-combine',
+    outputPath,
+  ]);
 }
