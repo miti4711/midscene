@@ -11,7 +11,8 @@ Options:
   --to <index>           Stop replaying at this action index. Default: last action
    --skip-noops           Skip read-only actions (getScreenSize, getMousePos). Default: true
    --no-skip-noops        Do not skip read-only actions
-    --capture              Capture a screenshot before each action
+     --capture              Capture a screenshot before each action (suffix _expected)
+     --self-heal            Capture a screenshot before each action (suffix _actual)
     --screenshot-dir <dir> Screenshot output directory. Default: ./screenshots
    --help                 Show this message
 `);
@@ -25,6 +26,7 @@ function parseArgs(argv: string[]) {
     to: Number.POSITIVE_INFINITY,
     skipNoOps: true,
     capture: false,
+    selfHeal: false,
     screenshotDir: '',
   };
 
@@ -48,6 +50,8 @@ function parseArgs(argv: string[]) {
       args.skipNoOps = false;
     } else if (arg === '--capture') {
       args.capture = true;
+    } else if (arg === '--self-heal') {
+      args.selfHeal = true;
     } else if (arg === '--screenshot-dir') {
       i++;
       args.screenshotDir = argv[i];
@@ -112,6 +116,7 @@ export async function main() {
     endAt: toIndex,
     skipNoOps: args.skipNoOps,
     capture: args.capture,
+    selfHeal: args.selfHeal,
     screenshotDir: args.screenshotDir || './screenshots',
     onBeforeAction: (action, index) => {
       process.stdout.write(

@@ -32,6 +32,7 @@ export interface ReplayOptions {
   endAt?: number;
   skipNoOps?: boolean;
   capture?: boolean;
+  selfHeal?: boolean;
   screenshotDir?: string;
   onBeforeAction?: (action: ReplayAction, index: number) => void;
   onAfterAction?: (action: ReplayAction, index: number) => void;

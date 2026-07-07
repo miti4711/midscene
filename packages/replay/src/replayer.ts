@@ -29,13 +29,20 @@ export async function replay(
     endAt = parsedLog.actions.length - 1,
     skipNoOps = true,
     capture,
+    selfHeal,
     screenshotDir = './screenshots',
     onBeforeAction,
     onAfterAction,
     onError,
   } = options;
 
-  if (capture) {
+  if (capture && selfHeal) {
+    throw new Error(
+      'Cannot use both --capture and --self-heal at the same time.',
+    );
+  }
+
+  if (capture || selfHeal) {
     fs.mkdirSync(screenshotDir, { recursive: true });
   }
 
@@ -95,11 +102,12 @@ export async function replay(
 
     onBeforeAction?.(action, globalIdx);
 
-    if (capture) {
+    if (capture || selfHeal) {
       const padded = String(screenshotCounter).padStart(4, '0');
+      const suffix = selfHeal ? 'actual' : 'expected';
       const screenshotPath = path.join(
         screenshotDir,
-        `${padded}_${action.name}_expected.png`,
+        `${padded}_${action.name}_${suffix}.png`,
       );
       try {
         const buf = await captureScreenshot();
