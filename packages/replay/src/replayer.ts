@@ -126,6 +126,7 @@ export async function replay(
           `${padded}_${action.name}_expected.png`,
         );
         if (fs.existsSync(expectedPath)) {
+          /* no more needed
           const diffPath = path.join(
             screenshotDir,
             `${padded}_${action.name}_diff.png`,
@@ -136,6 +137,59 @@ export async function replay(
           } catch (err) {
             console.error(`  [diff error] ${err}`);
           }
+          */
+
+          const maskPath = path.join(screenshotDir, 'mask.png');
+          let diffImagesExpected = path.join(
+            screenshotDir,
+            `${padded}_${action.name}_expected_masked.png`,
+          );
+          let diffImagesActual = path.join(
+            screenshotDir,
+            `${padded}_${action.name}_actual_masked.png`,
+          );
+
+          if (fs.existsSync(maskPath)) {
+            try {
+              const expectedMaskedPath = path.join(
+                screenshotDir,
+                `${padded}_${action.name}_expected_masked.png`,
+              );
+              mask(expectedPath, maskPath, expectedMaskedPath);
+              console.log(`  [mask] ${expectedMaskedPath}`);
+              diffImagesExpected = path.join(
+                screenshotDir,
+                `${padded}_${action.name}_expected_masked.png`,
+              );
+            } catch (err) {
+              console.error(`  [mask expected error] ${err}`);
+            }
+
+            try {
+              const actualMaskedPath = path.join(
+                screenshotDir,
+                `${padded}_${action.name}_actual_masked.png`,
+              );
+              mask(screenshotPath, maskPath, actualMaskedPath);
+              console.log(`  [mask] ${actualMaskedPath}`);
+              diffImagesActual = path.join(
+                screenshotDir,
+                `${padded}_${action.name}_actual_masked.png`,
+              );
+            } catch (err) {
+              console.error(`  [mask actual error] ${err}`);
+            }
+          }
+          const diffImagesResult = path.join(
+            screenshotDir,
+            `${padded}_${action.name}_diff_masked.png`,
+          );
+          const diffCount = calculateImagMagickDiff(
+            diffImagesActual,
+            diffImagesExpected,
+            diffImagesResult,
+          );
+          console.log(`    Differences in UI: ${diffCount}!!!!!!!`);
         }
       }
 
@@ -355,6 +409,51 @@ function generateImagMagickDiff(
     '-channel',
     'RGB',
     '-combine',
+    outputPath,
+  ]);
+}
+
+/**
+ * Generate a visual diff between expected and actual screenshots using
+ * ImageMagick's darken-composite technique.
+ */
+function calculateImagMagickDiff(
+  expectedPath: string,
+  actualPath: string,
+  outputPath: string,
+): number {
+  console.log(
+    `compare -metric AE -fuzz 5% ${actualPath} ${expectedPath} ${outputPath}`,
+  );
+  try {
+    execFileSync('compare', [
+      '-metric',
+      'AE',
+      '-fuzz',
+      '5%',
+      actualPath,
+      expectedPath,
+      outputPath,
+    ]);
+    // returning 0 to indicate both have no differences
+    return 0;
+  } catch {
+    // returning 1 to indicate both are different
+    return 1;
+  }
+}
+
+/**
+ * Apply a mask image to a screenshot using ImageMagick's minus composite.
+ * Command: magick <input> mask.png -compose minus -composite <output>
+ */
+function mask(inputPath: string, maskPath: string, outputPath: string): void {
+  execFileSync('magick', [
+    inputPath,
+    maskPath,
+    '-compose',
+    'plus',
+    '-composite',
     outputPath,
   ]);
 }
